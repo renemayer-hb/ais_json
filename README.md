@@ -10,10 +10,10 @@ Useful links:
 * https://web.archive.org/web/20131106091747/http://wiki.ham.fi/JSON_AIS.en
 
 
-installation:
-pip3 install libais
-edit the paths in the *.service file
-copy the *.service file to /etc/systemd/system
-sudo systemctl enable ais_json-master
-edit config.py
-sudo systemctl start ais_json-master
+installation:<br>
+pip3 install libais<br>
+edit the paths in the *.service file<br>
+copy the *.service file to /etc/systemd/system<br>
+sudo systemctl enable ais_json-master<br>
+edit config.py<br>
+sudo systemctl start ais_json-master<br>

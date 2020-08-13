@@ -11,5 +11,9 @@ Useful links:
 
 
 installation:
-
 pip3 install libais
+edit the paths in the *.service file
+copy the *.service file to /etc/systemd/system
+sudo systemctl enable ais_json-master
+edit config.py
+sudo systemctl start ais_json-master

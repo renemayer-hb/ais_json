@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
-from settings import URL, NAME, PORT, IP
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+from termcolor import colored
+
+from settings import URL, NAME, PORT, IP, LOGFILE
 import json
 import ais.stream
 import socket
@@ -11,9 +15,15 @@ import requests
 #PORT = 5000
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+def stripPadding(theString):
+  return theString.rstrip('@')
+  
+while True:
+
 sock.bind((IP, PORT))
 
-while True:
+
 
   for msg in ais.stream.decode(sock.makefile('r'),keep_nmea=True):
     rxtime =  datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S") #YYYYMMDDHHMMSS
@@ -42,10 +52,13 @@ while True:
     if 'part_num' in parsed:
       ais['partno'] = parsed['part_num']
     if 'callsign' in parsed:
+      parsed['callsign'] = stripPadding(parsed['callsign'])
       ais['callsign'] = parsed['callsign']
     if 'name' in parsed:
+      parsed['name'] = stripPadding(parsed['name'])
       ais['shipname'] = parsed['name']
     if 'vendor_id' in parsed:
+      parsed['vendor_id'] = stripPadding(parsed['vendor_id'])
       ais['vendorid'] = parsed['vendor_id']
     if 'dim_a' in parsed:
       ais['ref_front'] = parsed['dim_a']
@@ -58,6 +71,7 @@ while True:
     if 'width' in parsed:
       ais['width'] = parsed['width']
     if 'destination' in parsed:
+      parsed['destination'] = stripPadding(parsed['destination'])
       ais['destination'] = parsed['destination']
     if 'persons' in parsed:
       ais['persons_on_board'] = parsed['persons']
@@ -76,15 +90,32 @@ while True:
             "groups":  [groups]
             }
     
+
+    with open(LOGFILE, "a") as logfile:
+      tstamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S] ") 
+      logfile.write(tstamp + json.dumps(parsed) + "\n")
+
     post = json.dumps(output)
     try:
       r = requests.post(URL, files={'jsonais': (None, post)})
+
+      if 'shipname' in ais:
+        print('Message type: ' + str(ais['msgtype']) + ' mmsi: ' + str(ais['mmsi']) + ' name: ' + ais['shipname'])
+      else:
+        print('Message type: ' + str(ais['msgtype']) + ' mmsi: ' + str(ais['mmsi']))
+
+
+
       #dump non common packets for debugging
       if parsed['id'] not in (1,2,3,4):
-        print ('---')
-        print ('NMEA:', parsed['nmea'])
-        print ('Parsed:', parsed)
-        print ('Post:', post)
-        print ('Result:', json.loads(r.text)['description'])
+c
+       print(colored('-- Uncommon packet recieved\n', 'red'))
+       print(colored('id:', 'green'), parsed['id'])
+       print(colored('NMEA:', 'green'), parsed['nmea'])
+       print(colored('Parsed:', 'green'), parsed)
+       print(colored('Post:', 'green'), post)
+       print(colored('Result:', 'green'), json.loads(r.text)['description'])
+
     except requests.exceptions.RequestException as e:
       print e
+sock.close()

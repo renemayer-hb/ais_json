@@ -3,3 +3,4 @@ NAME='CALLSIGN'
 PORT=5000
 IP='127.0.0.1'
 Logging= false
+LOGFILE=
